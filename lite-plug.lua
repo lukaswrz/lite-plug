@@ -103,6 +103,10 @@ local function reportindex(index, key)
   end
 end
 
+local function getindex()
+  return json.decode(consume(SELF_INDEX_PATH))
+end
+
 --
 
 local curl = {
@@ -203,7 +207,7 @@ function Plugin:deactivate(target, link)
   local attr = fs.symlinkattributes(link)
   if not self:is_installed(target) then
     if attr then
-      error("Refusing to remove " .. quote(link) .. " due to it not being a link for " .. quote(self.key) .. ".\n")
+      error("Refusing to remove " .. quote(link) .. " due to it not being a link for " .. quote(self.key) .. ".")
     else
       error("Plugin " .. quote(self.key) .. " is not installed.")
     end
@@ -285,14 +289,31 @@ function Plugin:is_activated(target, link)
   return false
 end
 
--- cli
+function Plugin.search(index, ...)
+  local result = {}
+  for key, _ in pairs(index) do
+    local match = true
+    local patterns = table.pack(...)
+    for i = 1, patterns.n do
+      if string.match(key, patterns[i]) == nil then
+        match = false
+        break
+      end
+    end
+    if match then
+      table.insert(result, key)
+    end
+  end
+  return result
+end
 
-local index = json.decode(consume(SELF_INDEX_PATH))
+-- cli
 
 local parser = argparse("lite-plug", "A bare-bones plugin manager for Lite XL")
 
 local install = parser:command("install", "Install a plugin.")
   :action(function(args, name)
+    local index = getindex()
     for _, key in pairs(args["plugin"]) do
       reportindex(index, key)
 
@@ -325,6 +346,7 @@ install:flag("-r --reinstall", "Reinstall the plugin.")
 
 local remove = parser:command("remove", "Remove a plugin.")
   :action(function(args, name)
+    local index = getindex()
     for _, key in pairs(args["plugin"]) do
       reportindex(index, key)
 
@@ -343,6 +365,7 @@ remove:argument("plugin", "Plugin to deactivate.")
 
 local activate = parser:command("activate", "Activate a plugin.")
   :action(function(args, name)
+    local index = getindex()
     for _, key in pairs(args["plugin"]) do
       reportindex(index, key)
 
@@ -359,6 +382,7 @@ activate:argument("plugin", "Plugin to activate.")
 
 local deactivate = parser:command("deactivate", "Deactivate a plugin.")
   :action(function(args, name)
+    local index = getindex()
     for _, key in pairs(args["plugin"]) do
       reportindex(index, key)
 
@@ -375,6 +399,7 @@ deactivate:argument("plugin", "Plugin to deactivate.")
 
 local update = parser:command("update", "Update installed plugins.")
   :action(function(name)
+    local index = getindex()
     for key, _ in pairs(index) do
       local plugin = Plugin:new(key, index[key]["kind"], index[key]["urls"])
       local target = SELF_PLUGIN_DIR .. "/" .. key
@@ -386,5 +411,15 @@ local update = parser:command("update", "Update installed plugins.")
       end
     end
   end)
+
+local search = parser:command("search", "Search for plugins.")
+  :action(function(args, name)
+    local index = getindex()
+    for _, result in ipairs(Plugin.search(index, table.unpack(args["pattern"]))) do
+      put(quote(result) .. "\n")
+    end
+  end)
+search:argument("pattern", "Search query as a Lua pattern. A plugin name must match all patterns.")
+  :args("1+")
 
 parser:parse()
