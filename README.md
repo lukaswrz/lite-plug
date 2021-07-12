@@ -19,10 +19,11 @@ It currently requires Lua 5.3.
 
 Clone and enter the repository, then:
 
-```
-sudo luarocks --lua-version 5.3 make lite-plug-dev-1.rockspec
-mkdir -p ~/.config/lite-plug/plugins
-cp index.json ~/.config/lite-plug
+```console
+$ # alternatively: luarocks --local --lua-version 5.3 make lite-plug-dev-1.rockspec
+$ sudo luarocks --lua-version 5.3 make lite-plug-dev-1.rockspec
+$ mkdir -p -- "${XDG_CONFIG_HOME:-$HOME/.config}/lite-plug/plugins"
+$ cp -- index.json "${XDG_CONFIG_HOME:-$HOME/.config}/lite-plug"
 ```
 
 ## Configuration
@@ -54,7 +55,7 @@ A [JSON file](index.json) containing all data for the plugins listed on
 
 ## Example usage
 
-```
+```console
 $ lite-plug install theme16 autosave.lua
 Installing "theme16" via "git"... Done.
 Activating "theme16"... Done.
