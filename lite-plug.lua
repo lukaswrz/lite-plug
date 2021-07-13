@@ -355,8 +355,14 @@ local remove = parser:command("remove", "Remove a plugin.")
       local link = LITE_PLUGIN_DIR .. "/" .. key
 
       reportcall(
-        function() return plugin:deactivate(target, link) end,
-        function() return plugin:remove(target) end
+        function()
+          if plugin:is_activated(target, link) then
+            return plugin:deactivate(target, link)
+          end
+        end,
+        function()
+          return plugin:remove(target)
+        end
       )
     end
   end)
