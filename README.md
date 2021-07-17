@@ -71,6 +71,8 @@ Deactivating "theme16"... Done.
 Removing "theme16"... Done.
 $ lite-plug activate autosave.lua
 Activating "autosave.lua"... Done.
+$ lite-plug search --installed true --activated true autosave
+"autosave.lua"
 $ lite-plug install --reinstall autosave.lua
 Removing "autosave.lua"... Done.
 Installing "autosave.lua" via "file"... Done.

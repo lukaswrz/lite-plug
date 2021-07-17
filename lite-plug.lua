@@ -289,7 +289,7 @@ function Plugin:is_activated(target, link)
   return false
 end
 
-function Plugin.search(index, ...)
+function Plugin.search(index, condition, ...)
   local result = {}
   for key, _ in pairs(index) do
     local match = true
@@ -301,7 +301,10 @@ function Plugin.search(index, ...)
       end
     end
     if match then
-      table.insert(result, key)
+      local plugin = Plugin:new(key, index[key]["kind"], index[key]["urls"])
+      if condition(plugin) then
+        table.insert(result, key)
+      end
     end
   end
   return result
@@ -421,11 +424,50 @@ local update = parser:command("update", "Update installed plugins.")
 local search = parser:command("search", "Search for plugins.")
   :action(function(args, name)
     local index = getindex()
-    for _, result in ipairs(Plugin.search(index, table.unpack(args["pattern"]))) do
+    local function condition(plugin)
+      return args["activated"](plugin) and args["installed"](plugin)
+    end
+    for _, result in ipairs(Plugin.search(index, condition, table.unpack(args["pattern"]))) do
       put(quote(result) .. "\n")
     end
   end)
 search:argument("pattern", "Search query as a Lua pattern. A plugin name must match all patterns.")
   :args("1+")
+search:option("-i --installed")
+  :description("Filter by installed or not installed plugins.")
+  :default("any")
+  :choices({"true", "false", "any"})
+  :convert({
+    ["true"] = function(plugin)
+      local target = SELF_PLUGIN_DIR .. "/" .. plugin.key
+      return plugin:is_installed(target)
+    end,
+    ["false"] = function(plugin)
+      local target = SELF_PLUGIN_DIR .. "/" .. plugin.key
+      return not plugin:is_installed(target)
+    end,
+    ["any"] = function(plugin)
+      return true
+    end
+  })
+search:option("-a --activated")
+  :description("Filter by activated or not activated plugins")
+  :default("any")
+  :choices({"true", "false", "any"})
+  :convert({
+    ["true"] = function(plugin)
+      local target = SELF_PLUGIN_DIR .. "/" .. plugin.key
+      local link = LITE_PLUGIN_DIR .. "/" .. plugin.key
+      return plugin:is_activated(target, link)
+    end,
+    ["false"] = function(plugin)
+      local target = SELF_PLUGIN_DIR .. "/" .. plugin.key
+      local link = LITE_PLUGIN_DIR .. "/" .. plugin.key
+      return not plugin:is_activated(target, link)
+    end,
+    ["any"] = function(plugin)
+      return true
+    end
+  })
 
 parser:parse()
