@@ -111,7 +111,7 @@ end
 
 local curl = {
   download = function(url, target)
-    local success = sh.exec("curl", "--silent", "--output", target, "--", url)
+    local success = sh.exec("curl", "--fail", "--location", "--silent", "--output", target, "--", url)
     if not success then
       error("Downloading " .. quote(url) .. " failed.")
     end
