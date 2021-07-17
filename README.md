@@ -15,6 +15,8 @@ Feature requests welcome.
 
 It currently requires Lua 5.3.
 
+Additionally, `git` and `curl` have to be installed and available in `$PATH`.
+
 ## Installation
 
 Clone and enter the repository, then:
