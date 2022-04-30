@@ -1,4 +1,7 @@
 <!-- vim: set shiftwidth=4 tabstop=4 expandtab : -->
+I don't use Lite XL anymore, so you should probably take a look at something
+like [lpm](https://github.com/debarchito/lpm) instead.
+
 # lite-plug
 
 lite-plug is a *very* bare-bones CLI plugin manager for
